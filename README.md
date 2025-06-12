@@ -2,6 +2,8 @@
 
 A Python bot that monitors a Notion database for tasks and syncs "In Progress" tasks to your Google Calendar.
 
+![Screenshot](Output.png)
+
 ## Features
 
 - Automatically schedules "In Progress" Notion tasks as Google Calendar events
