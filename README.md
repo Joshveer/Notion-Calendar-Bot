@@ -44,4 +44,5 @@ The script will run continuously, syncing tasks between Notion and Google Calend
 - Sensitive files (`.env`, `credentials.json`, `token.json`, `token.pickle`) are gitignored.
 - Make sure your Notion database has a "Task name", "Status", and "Calendar Event ID" property.
 
----
+## License
+[MIT](LICENSE)
