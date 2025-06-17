@@ -67,15 +67,14 @@ def update_calendar_event(event_id, title):
         print(f"[!] Discarded: {title} — Too short ({duration} min)")
         return
 
-    if abs((end_dt - now).total_seconds()) <= 300:
-
+    time_remaining = (end_dt - now).total_seconds()
+    if 0 < time_remaining <= 300:
         new_end = round_to_nearest_5(end_dt + timedelta(minutes=30))
         event['end'] = {'dateTime': new_end.isoformat(), 'timeZone': 'America/New_York'}
         updated = calendar.events().update(calendarId='primary', eventId=event_id, body=event).execute()
         print(f"[+] Extended: {title} until {new_end.strftime('%I:%M %p')} EST")
         return updated
     else:
-
         event['end'] = {'dateTime': now.isoformat(), 'timeZone': 'America/New_York'}
         updated = calendar.events().update(calendarId='primary', eventId=event_id, body=event).execute()
         print(f"[x] Ended: {title} at {now.strftime('%I:%M %p')} EST — Duration: {duration} min")
