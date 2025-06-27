@@ -53,13 +53,11 @@ def create_calendar_event(title):
     print(f"[+] Scheduled: {title} from {now.strftime('%I:%M %p')} to {end.strftime('%I:%M %p')} EST")
     return created['id']
 
-def update_calendar_event(event_id, title, status):
+def update_calendar_event(event_id, title):
     now = datetime.now(NY)
     event = calendar.events().get(calendarId='primary', eventId=event_id).execute()
     start_str = event['start']['dateTime']
     start_dt = datetime.fromisoformat(start_str).astimezone(NY)
-    end_str = event['end']['dateTime']
-    end_dt = datetime.fromisoformat(end_str).astimezone(NY)
     duration = int((now - start_dt).total_seconds() // 60)
 
     if duration < 5:
@@ -67,19 +65,10 @@ def update_calendar_event(event_id, title, status):
         print(f"[!] Discarded: {title} — Too short ({duration} min)")
         return
 
-    time_remaining = (end_dt - now).total_seconds()
-    if status == "In progress" and 0 < time_remaining <= 300:
-        new_end = round_to_nearest_5(end_dt + timedelta(minutes=30))
-        event['end'] = {'dateTime': new_end.isoformat(), 'timeZone': 'America/New_York'}
-        updated = calendar.events().update(calendarId='primary', eventId=event_id, body=event).execute()
-        print(f"[+] Extended: {title} until {new_end.strftime('%I:%M %p')} EST")
-        return updated
-    else:
-        new_end = round_to_nearest_5(now)
-        event['end'] = {'dateTime': new_end.isoformat(), 'timeZone': 'America/New_York'}
-        updated = calendar.events().update(calendarId='primary', eventId=event_id, body=event).execute()
-        print(f"[x] Ended: {title} at {new_end.strftime('%I:%M %p')} EST — Duration: {duration} min")
-        return updated
+    event['end'] = {'dateTime': now.isoformat(), 'timeZone': 'America/New_York'}
+    updated = calendar.events().update(calendarId='primary', eventId=event_id, body=event).execute()
+    print(f"[x] Ended: {title} at {now.strftime('%I:%M %p')} EST — Duration: {duration} min")
+    return updated
 
 def poll_notion():
     while True:
@@ -102,13 +91,12 @@ def poll_notion():
                     }
                 )
 
-            elif status in ["Pause", "Done", "In progress"] and event_id:
-                update_calendar_event(event_id, title, status)
-                if status in ["Pause", "Done"]:
-                    notion.pages.update(
-                        page_id=page["id"],
-                        properties={"Calendar Event ID": {"rich_text": []}}
-                    )
+            elif status in ["Pause", "Done"] and event_id:
+                update_calendar_event(event_id, title)
+                notion.pages.update(
+                    page_id=page["id"],
+                    properties={"Calendar Event ID": {"rich_text": []}}
+                )
         time.sleep(10)
 
 if __name__ == "__main__":
